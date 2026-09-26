@@ -25,9 +25,7 @@ SECRET_KEY = 'django-insecure-)8=lr_@rko%yid*q-$h81ber@%ddu4ofe1#+pbzwho$a$3!5#=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['goggles-darkened-excusably.ngrok-free.dev', ]
-
-CSRF_TRUSTED_ORIGINS = ['https://goggles-darkened-excusably.ngrok-free.dev']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -107,7 +105,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'pt-br'
 
-TIME_ZONE = 'America/Sao_Paulo'
+TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
