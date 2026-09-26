@@ -1,0 +1,55 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chamados | Avarias</title>
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'pagina_inicial' %}">AVARIAS</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Abrir menu"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'pagina_inicial' %}">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'avarias' %}">Avarias</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="{% url 'chamados' %}">Chamados</a></li>
+                    <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Divergências</a>
+                        <ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="{% url 'negativo' %}">Negativas</a></li><li><a class="dropdown-item" href="{% url 'positivo' %}">Positivas</a></li></ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container page-content chamados-page">
+        <div class="chamados-header">
+            <div><span class="form-kicker">Área administrativa</span><h1>Chamados de avarias</h1><p>Acompanhe as ocorrências até a resolução no local.</p></div>
+            <a class="btn btn-primary" href="{% url 'admin:index' %}">Administração</a>
+        </div>
+        <div class="chamados-stats">
+            <a href="?status=aberto"><strong>{{ contagens.aberto }}</strong><span>Em aberto</span></a>
+            <a href="?status=andamento"><strong>{{ contagens.andamento }}</strong><span>Em andamento</span></a>
+            <a href="?status=concluido"><strong>{{ contagens.concluido }}</strong><span>Concluídos</span></a>
+        </div>
+        <div class="chamados-filtros">
+            <a class="{% if filtro_atual == 'pendentes' %}selected{% endif %}" href="?status=pendentes">Pendentes</a>
+            <a class="{% if filtro_atual == 'todos' %}selected{% endif %}" href="?status=todos">Todos</a>
+            <a class="{% if filtro_atual == 'aberto' %}selected{% endif %}" href="?status=aberto">Em aberto</a>
+            <a class="{% if filtro_atual == 'andamento' %}selected{% endif %}" href="?status=andamento">Em andamento</a>
+            <a class="{% if filtro_atual == 'concluido' %}selected{% endif %}" href="?status=concluido">Concluídos</a>
+        </div>
+
+        <section class="chamados-section"><h2>Avarias <span>{{ avarias|length }}</span></h2>
+            {% for chamado in avarias %}<article class="chamado-item"><div class="chamado-info"><div class="chamado-title">{{ chamado.produto.nome_produto }} <small>{{ chamado.produto.codigo_produto }}</small></div><p>{{ chamado.descricao_avaria }}</p><div class="chamado-meta">{{ chamado.colaborador }} · Quantidade: {{ chamado.quantidade }} · {{ chamado.data|date:"d/m/Y H:i" }}</div></div><div class="chamado-action"><form method="post" action="{% url 'atualizar_chamado' 'avaria' chamado.id %}">{% csrf_token %}<select name="status" onchange="this.form.submit()"><option value="aberto" {% if chamado.status == 'aberto' %}selected{% endif %}>Em aberto</option><option value="andamento" {% if chamado.status == 'andamento' %}selected{% endif %}>Em andamento</option><option value="concluido" {% if chamado.status == 'concluido' %}selected{% endif %}>Concluir</option></select></form>{% if chamado.status == 'concluido' %}<form method="post" action="{% url 'excluir_chamado' 'avaria' chamado.id %}" onsubmit="return confirm('Excluir este chamado concluído? Esta ação não pode ser desfeita.');">{% csrf_token %}<button type="submit" class="btn-delete">Excluir</button></form>{% endif %}</div></article>{% empty %}<p class="empty-state">Nenhuma avaria neste filtro.</p>{% endfor %}
+        </section>
+        <section class="chamados-section"><h2>Divergências <span>{{ divergencias|length }}</span></h2>
+            {% for chamado in divergencias %}<article class="chamado-item"><div class="chamado-info"><div class="chamado-title"><span class="tipo-badge tipo-{{ chamado.tipo }}">{{ chamado.get_tipo_display }}</span> {{ chamado.produto.nome_produto }} <small>{{ chamado.produto.codigo_produto }}</small></div><p>Local: {{ chamado.local }}</p><div class="chamado-meta">{{ chamado.colaborador }} · Quantidade: {{ chamado.quantidade }} · {{ chamado.data|date:"d/m/Y H:i" }}</div></div><div class="chamado-action"><form method="post" action="{% url 'atualizar_chamado' 'divergencia' chamado.id %}">{% csrf_token %}<select name="status" onchange="this.form.submit()"><option value="aberto" {% if chamado.status == 'aberto' %}selected{% endif %}>Em aberto</option><option value="andamento" {% if chamado.status == 'andamento' %}selected{% endif %}>Em andamento</option><option value="concluido" {% if chamado.status == 'concluido' %}selected{% endif %}>Concluir</option></select></form>{% if chamado.status == 'concluido' %}<form method="post" action="{% url 'excluir_chamado' 'divergencia' chamado.id %}" onsubmit="return confirm('Excluir esta divergência concluída? Esta ação não pode ser desfeita.');">{% csrf_token %}<button type="submit" class="btn-delete">Excluir</button></form>{% endif %}</div></article>{% empty %}<p class="empty-state">Nenhuma divergência neste filtro.</p>{% endfor %}
+        </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

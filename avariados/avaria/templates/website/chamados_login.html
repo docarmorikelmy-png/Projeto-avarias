@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Acesso aos chamados</title>
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+</head>
+<body>
+    <main class="login-page">
+        <section class="login-card" aria-labelledby="login-title">
+            <span class="form-kicker">Área restrita</span>
+            <h1 id="login-title">Acesso aos chamados</h1>
+            <p>Entre com seu usuário administrativo para continuar.</p>
+            <form method="post">
+                {% csrf_token %}
+                {% if form.non_field_errors %}<div class="form-alert">{{ form.non_field_errors }}</div>{% endif %}
+                <div class="form-field">
+                    <label for="{{ form.username.id_for_label }}">Usuário</label>
+                    {{ form.username }}
+                </div>
+                <div class="form-field login-password">
+                    <label for="{{ form.password.id_for_label }}">Senha</label>
+                    {{ form.password }}
+                </div>
+                <button type="submit" class="btn btn-primary form-submit">Entrar</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

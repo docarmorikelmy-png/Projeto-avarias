@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ titulo }} | Avarias</title>
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'pagina_inicial' %}">AVARIAS</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Abrir menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'pagina_inicial' %}">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'avarias' %}">Avarias</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'chamados_login' %}">Chamados</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Divergências</a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{% url 'negativo' %}">Negativas</a></li>
+                            <li><a class="dropdown-item" href="{% url 'positivo' %}">Positivas</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container page-content">
+        <section class="form-card divergence-card divergence-{{ tipo }}" aria-labelledby="form-title">
+            <div class="form-heading">
+                <span class="form-kicker">Controle de avarias</span>
+                <h1 id="form-title">{{ titulo }}</h1>
+                <p>{{ descricao }}</p>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {{ form.tipo }}
+                {% if form.non_field_errors %}<div class="form-alert">{{ form.non_field_errors }}</div>{% endif %}
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="{{ form.colaborador.id_for_label }}">Colaborador</label>
+                        {{ form.colaborador }}
+                        {{ form.colaborador.errors }}
+                    </div>
+                    <div class="form-field">
+                        <label for="{{ form.local.id_for_label }}">Local onde encontrou</label>
+                        <input type="text" name="local" id="{{ form.local.id_for_label }}" class="form-control" placeholder="Ex.: depósito, loja ou corredor..." value="{{ form.local.value|default:'' }}" autocomplete="off">
+                        {{ form.local.errors }}
+                    </div>
+                    <div class="form-field form-field-wide">
+                        <label for="{{ form.produto_busca.id_for_label }}">Produto</label>
+                        <div class="autocomplete">
+                            {{ form.produto_busca }}
+                            {{ form.produto }}
+                            <div id="produto-resultados" class="autocomplete-results" role="listbox" hidden></div>
+                        </div>
+                        <small class="field-help">Pesquise pelo nome ou código e selecione um resultado.</small>
+                        {{ form.produto_busca.errors }}
+                        {{ form.produto.errors }}
+                    </div>
+                    <div class="form-field">
+                        <label for="{{ form.quantidade.id_for_label }}">Quantidade</label>
+                        {{ form.quantidade }}
+                        {{ form.quantidade.errors }}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary form-submit">Salvar divergência</button>
+            </form>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const buscaProduto = document.getElementById("id_produto_busca");
+        const produtoSelecionado = document.getElementById("id_produto");
+        const resultadosProduto = document.getElementById("produto-resultados");
+        let timerBusca;
+
+        function fecharResultados() {
+            resultadosProduto.hidden = true;
+            buscaProduto.setAttribute("aria-expanded", "false");
+        }
+
+        function selecionarProduto(item) {
+            buscaProduto.value = item.texto;
+            produtoSelecionado.value = item.id;
+            fecharResultados();
+        }
+
+        function mostrarResultados(resultados) {
+            resultadosProduto.innerHTML = "";
+            if (!resultados.length) {
+                resultadosProduto.innerHTML = '<div class="autocomplete-empty">Nenhum produto encontrado.</div>';
+            } else {
+                resultados.forEach((item) => {
+                    const opcao = document.createElement("button");
+                    opcao.type = "button";
+                    opcao.className = "autocomplete-option";
+                    opcao.setAttribute("role", "option");
+                    opcao.innerHTML = `<strong>${item.nome}</strong><span>${item.codigo}</span>`;
+                    opcao.addEventListener("click", () => selecionarProduto(item));
+                    resultadosProduto.appendChild(opcao);
+                });
+            }
+            resultadosProduto.hidden = false;
+            buscaProduto.setAttribute("aria-expanded", "true");
+        }
+
+        buscaProduto.addEventListener("input", () => {
+            produtoSelecionado.value = "";
+            clearTimeout(timerBusca);
+            const termo = buscaProduto.value.trim();
+            if (termo.length < 2) {
+                fecharResultados();
+                return;
+            }
+            timerBusca = setTimeout(async () => {
+                const resposta = await fetch(`{% url 'buscar_produtos' %}?q=${encodeURIComponent(termo)}`);
+                const dados = await resposta.json();
+                if (buscaProduto.value.trim() === termo) mostrarResultados(dados.resultados);
+            }, 250);
+        });
+
+        document.addEventListener("click", (evento) => {
+            if (!evento.target.closest(".autocomplete")) fecharResultados();
+        });
+    </script>
+</body>
+</html>
